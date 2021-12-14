@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 
+// Graph options
 const options = {
   layout: {
     hierarchical: {
@@ -22,6 +23,7 @@ const options = {
   interaction: { multiselect: false, dragView: false }
 };
 
+// Default graph data
 const defaultGraph = {
   nodes: [
     { id: 1, label: "Start", title: null }
@@ -78,17 +80,21 @@ export default function Home() {
   const handleStringInput = (e) => e.target.value.match(/(^[01]+$|^$)/g) && setInputString(e.target.value);
 
   const checkInputString = () => {
-    const currNode = 1;
-    const accepted = true;
+    const currNodeId = 1;
+
+    // Check if input string isn't empty
+    const accepted = inputString.length > 0;
+
+    // traverse automata according to input
     [...inputString].forEach((value, idx) => {
-      let nextEdge = graphData.edges.find(x => x.from === currNode && x.label.includes(value));
+      let nextEdge = graphData.edges.find(x => x.from === currNodeId && x.label.includes(value));
       if (nextEdge ) {
-        currNode = nextEdge.to;
+        currNodeId = nextEdge.to;
         
         // Check if last state is accepting state
         if (idx === inputString.length - 1) {
-          const currentNode = graphData.nodes.find(x => x.id === currNode);
-          accepted = !!currentNode.title && currentNode.title === "accepting";
+          const currNodeObj = graphData.nodes.find(x => x.id === currNodeId);
+          accepted = !!currNodeObj.title && currNodeObj.title === "accepting";
         }
 
         return
