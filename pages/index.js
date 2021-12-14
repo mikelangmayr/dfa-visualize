@@ -1,8 +1,97 @@
+import { useState } from 'react';
+import Graph from "react-graph-vis";
+import { v4 as uuidv4 } from "uuid";
 import Head from 'next/head'
-import Image from 'next/image'
 import styles from '../styles/Home.module.css'
 
+const options = {
+  layout: {
+    hierarchical: {
+      enabled: false,
+    }
+  },
+  edges: {
+    color: "#ABABAB"
+  },
+  nodes: {
+    color: "#BBBBBB"
+  },
+  physics: {
+    enabled: false
+  },
+  interaction: { multiselect: false, dragView: false }
+};
+
+const defaultGraph = {
+  nodes: [
+    { id: 1, label: "Start", title: null }
+  ],
+  edges: []
+};
+
 export default function Home() {
+  const [graphData, setGraphData] = useState(defaultGraph);
+  const [firstNode, setFirstNode] = useState(1);
+  const [secondNode, setSecondNode] = useState(1);
+  const [inputString, setInputString] = useState('');
+
+  const addNewState = (accptingState) => {
+    let newGraph = JSON.parse(JSON.stringify(graphData));
+    const ids = newGraph.nodes.map(x => x.id);
+    const newId = Math.max(...ids) + 1;
+    newGraph.nodes.push(accptingState ?
+      { id: newId, label: `Q${newId}`, borderWidth: 3, color: { border: '#000000' }, title: 'accepting'}
+      : { id: newId, label: `Q${newId}`, title: null }
+    );
+    setGraphData(newGraph);
+  }
+
+  const addEdge = (nodeId1, nodeId2, label = '0') => {
+    let newGraph = JSON.parse(JSON.stringify(graphData));
+    newGraph.edges.push({ from: parseInt(nodeId1), to: parseInt(nodeId2), label: label, smooth: { enabled: true, type: 'curvedCW', roundness: 1 } });
+    setGraphData(newGraph);
+
+    console.log(newGraph.edges)
+  };
+
+  const handleState1Change = (event) => {
+    setFirstNode(event.target.value);
+  };
+
+  const handleState2Change = (event) => {
+    setSecondNode(event.target.value);
+  }
+
+  const resetGraph = () => {
+    setGraphData(defaultGraph);
+  };
+
+  // Allow only binary strings
+  const handleStringInput = (e) => e.target.value.match(/(^[01]+$|^$)/g) && setInputString(e.target.value);
+
+  const checkInputString = () => {
+    const currNode = 1;
+    const accepted = true;
+    [...inputString].forEach((value, idx) => {
+      let nextEdge = graphData.edges.find(x => x.from === currNode && x.label === value);
+      if (nextEdge ) {
+        currNode = nextEdge.to;
+        
+        // Check if last state is accepting state
+        if (idx === inputString.length - 1) {
+          const currentNode = graphData.nodes.find(x => x.id === currNode);
+          accepted = !!currentNode.title && currentNode.title === "accepting";
+        }
+
+        return
+      } else {
+        accepted = false;
+      }
+    });
+
+    alert(accepted ? 'String accepted' : 'String not accepted');
+  }
+
   return (
     <div className={styles.container}>
       <Head>
@@ -12,56 +101,66 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
+        <div style={{ width: '80%' }}>
+          <div className="form-group">
+            <button className="btn btn-secondary m-2" onClick={resetGraph}>Reset DFA</button>
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
+            <button className="btn btn-secondary m-2" onClick={() => addNewState()}>Add new state</button>
+            <button className="btn btn-secondary m-2" onClick={() => addNewState(true)}>Add new accepting state</button>
+          </div>
 
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
+          <div className="row">
+            <div className="form-group col-sm-3 m-2">
+              <label>Pick state 1:</label>
+              <select value={firstNode} className="form-control" onChange={handleState1Change}>
+                {graphData.nodes.map(node => <option key={uuidv4()} value={node.id}>{node.label}</option>)}
+              </select>
+            </div>
+            <div className="form-group col-sm-3 m-2">
+              <label>Pick state 2:</label>
+              <select value={secondNode} className="form-control" onChange={handleState2Change}>
+                {graphData.nodes.map(node => <option key={uuidv4()} value={node.id}>{node.label}</option>)}
+              </select>
+            </div>
+            <div className="form-group col-sm-3 m-2 d-flex">
+              <div className="btn-group align-self-end" role="group" aria-label="Add edge">
+                <input type="button" className="btn btn-primary" onClick={() => addEdge(firstNode, secondNode)} value="Add 0 edge" />
+                <input type="button" className="btn btn-primary" onClick={() => addEdge(firstNode, secondNode, '1')} value="Add 1 edge" />
+              </div>  
+            </div>
+          </div>
 
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h2>Learn &rarr;</h2>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h2>Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+          <div className="row">
+            <div className="form-group col-sm-6 m-2">
+              <label>Binary input string: </label>
+              <input type="text" value={inputString}
+                className="form-control"
+                onChange={handleStringInput} 
+                placeholder="Input string..." />
+            </div>
+            <div className="form-group col-sm-4 d-flex m-2">
+              <input type="button" onClick={checkInputString} className="btn btn-success align-self-end"  value="Check string" />
+            </div>
+          </div>
+        </div>
+        
+        <div style={{ height: "50vh", width: "80vw", border: "1px solid" }}>
+          <Graph
+            key={uuidv4()}
+            graph={graphData}
+            options={options}
+          />
         </div>
       </main>
 
       <footer className={styles.footer}>
         <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
+          href=""
           target="_blank"
           rel="noopener noreferrer"
         >
           Powered by{' '}
-          <span className={styles.logo}>
-            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-          </span>
+          Mike
         </a>
       </footer>
     </div>
