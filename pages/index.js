@@ -48,10 +48,18 @@ export default function Home() {
 
   const addEdge = (nodeId1, nodeId2, label = '0') => {
     let newGraph = JSON.parse(JSON.stringify(graphData));
-    newGraph.edges.push({ from: parseInt(nodeId1), to: parseInt(nodeId2), label: label, smooth: { enabled: true, type: 'curvedCW', roundness: 1 } });
-    setGraphData(newGraph);
 
-    console.log(newGraph.edges)
+    // Check if edge exists already
+    const existingEdge = newGraph.edges.find(x => x.from === parseInt(nodeId1) && x.to === parseInt(nodeId2));
+    if (existingEdge) {
+      if (existingEdge.label !== label) {
+        existingEdge.label = '0, 1';
+      }
+    // otherwise add new edge
+    } else {
+      newGraph.edges.push({ from: parseInt(nodeId1), to: parseInt(nodeId2), label: label, smooth: { enabled: true, type: 'curvedCW', roundness: 1 } });
+    }
+    setGraphData(newGraph);
   };
 
   const handleState1Change = (event) => {
@@ -73,7 +81,7 @@ export default function Home() {
     const currNode = 1;
     const accepted = true;
     [...inputString].forEach((value, idx) => {
-      let nextEdge = graphData.edges.find(x => x.from === currNode && x.label === value);
+      let nextEdge = graphData.edges.find(x => x.from === currNode && x.label.includes(value));
       if (nextEdge ) {
         currNode = nextEdge.to;
         
