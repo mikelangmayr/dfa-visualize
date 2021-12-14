@@ -101,7 +101,9 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
-        <div style={{ width: '80%' }}>
+        <h1 className="m-5">DFA visualization tool</h1>
+
+        <div style={{ width: '80vw' }}>
           <div className="form-group">
             <button className="btn btn-secondary m-2" onClick={resetGraph}>Reset DFA</button>
 
@@ -152,17 +154,6 @@ export default function Home() {
           />
         </div>
       </main>
-
-      <footer className={styles.footer}>
-        <a
-          href=""
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          Mike
-        </a>
-      </footer>
     </div>
   )
 }
