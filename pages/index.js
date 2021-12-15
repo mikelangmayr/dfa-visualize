@@ -42,7 +42,7 @@ export default function Home() {
     const ids = newGraph.nodes.map(x => x.id);
     const newId = Math.max(...ids) + 1;
     newGraph.nodes.push(accptingState ?
-      { id: newId, label: `Q${newId}`, borderWidth: 3, color: { border: '#000000' }, title: 'accepting'}
+      { id: newId, label: `Q${newId}`, borderWidth: 3, color: { border: '#000000' }, title: 'accepting' }
       : { id: newId, label: `Q${newId}`, title: null }
     );
     setGraphData(newGraph);
@@ -53,10 +53,16 @@ export default function Home() {
 
     // Check if edge exists already
     const existingEdge = newGraph.edges.find(x => x.from === parseInt(nodeId1) && x.to === parseInt(nodeId2));
+    const existingOutTransition = newGraph.edges.find(x => x.from === parseInt(nodeId1) && x.label.includes(label)); 
+
     if (existingEdge) {
       if (existingEdge.label !== label) {
         existingEdge.label = '0, 1';
       }
+    // Check if edge with same value originates from this node already
+    } else if (existingOutTransition) {
+      const fromNode = newGraph.nodes.find(x => x.id === nodeId1);
+      alert(`${fromNode.label} has a transition with value ${label} already`)
     // otherwise add new edge
     } else {
       newGraph.edges.push({ from: parseInt(nodeId1), to: parseInt(nodeId2), label: label, smooth: { enabled: true, type: 'curvedCW', roundness: 1 } });
@@ -106,6 +112,16 @@ export default function Home() {
     alert(accepted ? 'String accepted' : 'String not accepted');
   }
 
+  const makeStartStateAccepting = () => {
+    let newGraph = JSON.parse(JSON.stringify(graphData));
+    const startNode = newGraph.nodes.find(x => x.id === 1);
+    startNode.borderWidth = 3;
+    startNode.color = { border: '#000000' };
+    startNode.title = 'accepting';
+
+    setGraphData(newGraph);
+  }
+
   return (
     <div className={styles.container}>
       <Head>
@@ -123,6 +139,8 @@ export default function Home() {
 
             <button className="btn btn-secondary m-2" onClick={() => addNewState()}>Add new state</button>
             <button className="btn btn-secondary m-2" onClick={() => addNewState(true)}>Add new accepting state</button>
+
+            <button className="btn btn-secondary m-2" onClick={() => makeStartStateAccepting()}>Make start state accepting</button>
           </div>
 
           <div className="row">
@@ -140,8 +158,8 @@ export default function Home() {
             </div>
             <div className="form-group col-sm-3 m-2 d-flex">
               <div className="btn-group align-self-end" role="group" aria-label="Add edge">
-                <input type="button" className="btn btn-primary" onClick={() => addEdge(firstNode, secondNode)} value="Add 0 edge" />
-                <input type="button" className="btn btn-primary" onClick={() => addEdge(firstNode, secondNode, '1')} value="Add 1 edge" />
+                <input type="button" className="btn btn-primary" onClick={() => addEdge(firstNode, secondNode)} value="Add 0 transition" />
+                <input type="button" className="btn btn-primary" onClick={() => addEdge(firstNode, secondNode, '1')} value="Add 1 transition" />
               </div>  
             </div>
           </div>
